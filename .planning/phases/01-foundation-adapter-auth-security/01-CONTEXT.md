@@ -1,6 +1,7 @@
 # Phase 1: Foundation — Adapter, Auth & Security - Context
 
 **Gathered:** 2026-09-12
+**Updated:** 2026-09-12 (added: arquitetura hexagonal, rate limiting, validação de secrets, formato de erro)
 **Status:** Ready for planning
 
 <domain>
@@ -36,6 +37,25 @@ User can log in securely, configure encrypted Binance credentials, and have mark
 - **D-14:** O sync automático na inicialização só dispara quando a tabela de símbolos está vazia (primeira execução) — reinicializações subsequentes não re-sincronizam automaticamente; sync depois disso é sempre manual via botão.
 - **D-15:** A sincronização (manual ou automática) deve rodar dentro de uma transação atômica — se o bulk insert falhar no meio, os símbolos antigos permanecem intactos (corrige o `deleteAll()` + `bulkInsert()` sem transação apontado em CONCERNS.md).
 - **D-16:** Se a sincronização automática na inicialização falhar (ex: Binance fora do ar durante o boot), o servidor deve continuar subindo normalmente — loga o erro e segue com os símbolos já existentes (ou vazio, na primeira vez); não deve bloquear o boot.
+
+### Arquitetura hexagonal / Clean Architecture no backend
+- **D-17:** Cada módulo (auth, settings, symbols) segue portas e adaptadores internamente: `domain/` (entidades + regras puras), `application/` (use cases), `infrastructure/` (Drizzle repos, Fastify controllers, Exchange Adapter concreto) — a divisão por domínio recomendada em `research/ARCHITECTURE.md` (modules/, exchanges/, security/) se mantém no nível superior; a hexagonal é aplicada dentro de cada módulo, não como camadas globais no topo do backend.
+- **D-18:** Portas (interfaces) são definidas por dependência externa e por módulo (ex: `SettingsRepositoryPort`, `ExchangePort`), implementadas na `infrastructure/` daquele módulo — não centralizadas em um `shared/ports/` genérico.
+- **D-19:** Use cases lançam exceptions de domínio tipadas (ex: `InvalidCredentialsError extends DomainError`) em vez de retornar response objects com campo `error?` opcional — corrige diretamente o anti-pattern documentado em `codebase/ARCHITECTURE.md`. Um error handler central do Fastify mapeia cada tipo de exception (incluindo `ZodError`) para o status HTTP e envelope de resposta corretos (ver D-27).
+
+### Rate limiting
+- **D-20:** Login tem rate limit de 5 tentativas falhas por 15 minutos.
+- **D-21:** Rate limit de login é aplicado por IP (não por email) — suficiente dado que o sistema é single-user com um único email válido.
+- **D-22:** Rate limiting é aplicado globalmente na API via `@fastify/rate-limit` (limite generoso, ex: 100 req/min), com uma regra específica mais restrita apenas na rota de login (D-20) — atende SEC-08 em REQUIREMENTS.md.
+
+### Validação de secrets no startup
+- **D-23:** Em produção (`NODE_ENV=production`), o servidor falha o boot (fail-fast) se `JWT_SECRET`, `AES_KEY` ou outra variável obrigatória estiver ausente — nenhum valor padrão inseguro é usado, corrigindo diretamente o "Hardcoded AES Encryption Key" de CONCERNS.md.
+- **D-24:** Em desenvolvimento (`NODE_ENV=development`), se essas variáveis faltarem, o servidor gera uma chave temporária em memória e sobe mesmo assim, logando um aviso claro (ex: "AES_KEY não definida, usando chave temporária gerada em memória. Configure AES_KEY no .env para persistência entre restarts.") uma vez no boot — facilita rodar local sem `.env` completo, sem reintroduzir o fallback inseguro em produção.
+
+### Formato de erro de validação e envelope de erro
+- **D-25:** Erros de validação de input (Zod) retornam um array/objeto detalhando cada campo com problema (ex: `{field: "email", message: "formato inválido"}`), não uma mensagem genérica — permite ao frontend destacar o campo exato.
+- **D-26:** A resposta de erro usa o mesmo envelope padrão do resto da API (`{ data, message, timestamp }`, conforme convenção do projeto), com os detalhes dos campos inválidos dentro de `data` — não um formato de erro dedicado/diferente.
+- **D-27:** Um error handler central único no Fastify (`setErrorHandler`) traduz todos os tipos de erro para esse mesmo envelope: `ZodError` → 400 com campos, exceptions de domínio específicas (D-19) → 401/403/404/409 conforme o tipo, erro não tratado → 500.
 
 ### Claude's Discretion
 - Valores exatos de expiração de access/refresh token dentro da faixa acordada (~15min / 7–30 dias).
@@ -79,6 +99,8 @@ User can log in securely, configure encrypted Binance credentials, and have mark
 
 ### Integration Points
 - Nova estrutura de módulos segue `research/ARCHITECTURE.md`: `modules/auth/`, `modules/settings/`, `modules/symbols/`, `exchanges/core/` + `exchanges/binance/`, `security/credential-vault.ts`.
+- Cada módulo aplica hexagonal internamente (D-17): `modules/<nome>/domain/`, `modules/<nome>/application/`, `modules/<nome>/infrastructure/` — portas específicas por módulo (D-18), não um `shared/ports/` genérico.
+- Error handler central único no Fastify (`setErrorHandler`) — ponto de integração compartilhado por todos os módulos para traduzir exceptions de domínio e `ZodError` no envelope de resposta padrão (D-19, D-25 a D-27).
 
 </code_context>
 

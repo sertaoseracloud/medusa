@@ -61,6 +61,52 @@
 
 ---
 
+## Arquitetura hexagonal / Clean Architecture no backend
+
+> Área adicionada pelo usuário via "Other" numa atualização posterior do context (não fazia parte da análise inicial de gray areas).
+
+| Question | Options | Selected |
+|---|---|---|
+| Como hexagonal se encaixa na estrutura por módulos da pesquisa? | Hexagonal dentro de cada módulo / Hexagonal global (camadas no topo) | Hexagonal dentro de cada módulo |
+| Como definir portas para dependências externas? | Porta por dependência externa / Portas compartilhadas no core | Porta por dependência externa |
+| O que use cases retornam para controllers? | Result/Either type explícito / Exceptions tipadas (throw) | Exceptions tipadas (throw) |
+
+**Notes:** Corrige o anti-pattern de response objects com `error?` opcional documentado em `codebase/ARCHITECTURE.md`.
+
+---
+
+## Rate limiting no login
+
+| Question | Options | Selected |
+|---|---|---|
+| Quantas tentativas antes de bloquear? | 5 tentativas / 15 min / Você decide | 5 tentativas / 15 min |
+| Rate limit por IP, email, ou ambos? | Ambos (IP + email) / Só por IP | Só por IP |
+| Aplicar rate limit a outros endpoints (SEC-08)? | Sim, global + limite restrito no login / Só no login por enquanto | Sim, global + limite mais restrito no login |
+
+---
+
+## Validação de secrets no startup
+
+| Question | Options | Selected |
+|---|---|---|
+| Comportamento se JWT_SECRET/AES_KEY faltar? | Falhar no boot (fail-fast) / Gerar valor temporário e avisar | Gerar valor temporário e avisar |
+| Follow-up: risco de dados irrecuperáveis após restart + conflito com PROJECT.md/CONCERNS.md — isso muda a resposta? | Só em dev, nunca em produção / Manter: gerar e avisar sempre / Na verdade, fail-fast sempre | Só em desenvolvimento, nunca em produção |
+| Conteúdo do aviso de log em dev? | Aviso simples + lembrete de .env / Você decide | Aviso simples + lembrete de .env |
+
+**Notes:** Primeira resposta do usuário ("gerar e avisar sempre") entraria em conflito direto com o constraint de PROJECT.md de corrigir toda a superfície do CONCERNS.md (fallback inseguro de chave). Question de follow-up expôs o trade-off explicitamente antes de fechar a decisão; usuário ajustou para diferenciar dev de produção.
+
+---
+
+## Formato de erro de validação (Zod)
+
+| Question | Options | Selected |
+|---|---|---|
+| Listar campos com problema ou mensagem genérica? | Listar cada campo com problema / Mensagem genérica única | Listar cada campo com problema |
+| Envelope de erro: padrão da API ou dedicado? | Mesmo envelope padrão, com detalhes em `data` / Envelope dedicado de erro | Mesmo envelope padrão, com detalhes em `data` |
+| Vale também para exceptions de domínio (hexagonal)? | Sim, um error handler central para tudo / Handlers separados por tipo | Sim, um error handler central para tudo |
+
+---
+
 ## Claude's Discretion
 
 - Valores exatos de expiração de access/refresh token dentro da faixa acordada.
