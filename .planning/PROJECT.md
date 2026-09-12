@@ -43,6 +43,7 @@ O sistema precisa continuar operando como um bot de trading confiável: autentic
 - [ ] Relatórios de performance/histórico de operações
 - [ ] Autenticação de dois fatores (2FA)
 - [ ] Decisão sobre infraestrutura (manter Azure SQL/Storage/CDN ou migrar para outro provedor/banco) a ser tomada com base na pesquisa de stack
+- [ ] Validação manual de UAT via navegador (Claude Browser) simulando a visão do usuário final, como etapa de verificação em fases com interface
 
 ### Out of Scope
 
