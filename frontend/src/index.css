@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* UI-SPEC color contract (Phase 1, dark-by-default, single theme for v1) */
+  --background: #0A0E14; /* dominant 60% — page background, app shell */
+  --foreground: #E5E7EB;
+  --card: #151B26; /* secondary 30% — cards, input backgrounds */
+  --card-foreground: #E5E7EB;
+  --popover: #151B26;
+  --popover-foreground: #E5E7EB;
+  --primary: #3B82F6; /* accent 10% — primary CTAs, focus rings, links */
+  --primary-foreground: #0A0E14;
+  --secondary: #151B26;
+  --secondary-foreground: #E5E7EB;
+  --muted: #151B26;
+  --muted-foreground: #94A3B8;
+  --accent: #151B26;
+  --accent-foreground: #E5E7EB;
+  --destructive: #EF4444; /* error alerts, validation text, logout button */
+  --destructive-foreground: #FAFAFA;
+  --border: #1F2733;
+  --input: #151B26;
+  --ring: #3B82F6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+}
+
+/* Typography roles — exactly two weights (400, 600) and four sizes (14/16/20/28px) */
+.text-role-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.text-role-body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.text-role-heading {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.text-role-display {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+}
