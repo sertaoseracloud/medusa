@@ -2,6 +2,7 @@ import fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import jwt from '@fastify/jwt';
 import {
   serializerCompiler,
   validatorCompiler,
@@ -13,6 +14,8 @@ import { registerErrorHandler } from './shared/http/error-handler.js';
 import { ok } from './shared/http/response-envelope.js';
 import type { DrizzleDB } from './persistence/db.js';
 import type { AppSecrets } from './security/secrets.js';
+import { authRoutes } from './modules/auth/infrastructure/auth.routes.js';
+import { ACCESS_TOKEN_TTL } from './modules/auth/infrastructure/jwt.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -55,10 +58,17 @@ export async function buildApp(deps: BuildAppDeps): Promise<AppInstance> {
     timeWindow: '1 minute',
   });
 
+  await app.register(jwt, {
+    secret: deps.secrets.JWT_SECRET,
+    sign: { expiresIn: ACCESS_TOKEN_TTL },
+  });
+
   registerErrorHandler(app);
 
   app.decorate('db', deps.db);
   app.decorate('secrets', deps.secrets);
+
+  await app.register(authRoutes);
 
   app.get('/health', async () => ok({ status: 'ok' }));
 
