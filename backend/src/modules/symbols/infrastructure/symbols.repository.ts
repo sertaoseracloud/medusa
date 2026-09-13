@@ -30,20 +30,21 @@ export function createSymbolsRepository(db: DrizzleDB): SymbolsRepositoryPort {
         conditions.push(eq(symbols.quote, filter.quote));
       }
       if (filter.search) {
-        conditions.push(ilike(symbols.symbol, `%${filter.search}%`));
+        // WR-04: escape LIKE wildcard characters (%, _) and the escape
+        // character itself so a user-supplied search term is matched
+        // literally instead of being (mis)interpreted as a SQL wildcard
+        // pattern (e.g. a bare "%" would otherwise match every symbol).
+        const escaped = filter.search.replace(/[%_\\]/g, (c) => `\\${c}`);
+        conditions.push(ilike(symbols.symbol, `%${escaped}%`));
       }
 
-      const query = db.select().from(symbols).orderBy(asc(symbols.symbol));
+      const base = db.select().from(symbols);
 
-      if (conditions.length === 0) {
-        return query;
-      }
-
-      return db
-        .select()
-        .from(symbols)
-        .where(and(...conditions))
-        .orderBy(asc(symbols.symbol));
+      // WR-03: build exactly one query per call instead of an unused
+      // base query plus a second, separately-constructed filtered query.
+      return conditions.length > 0
+        ? base.where(and(...conditions)).orderBy(asc(symbols.symbol))
+        : base.orderBy(asc(symbols.symbol));
     },
 
     async lastSyncedAt(): Promise<Date | null> {
