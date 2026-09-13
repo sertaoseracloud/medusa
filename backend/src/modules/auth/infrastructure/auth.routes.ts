@@ -3,7 +3,8 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { createUserRepository } from './user.repository.js';
 import { createRefreshTokenRepository } from './refresh-token.repository.js';
 import { createLoginUseCase } from '../application/login.use-case.js';
-import { loginBodySchema } from './auth.schemas.js';
+import { createRefreshUseCase } from '../application/refresh.use-case.js';
+import { loginBodySchema, refreshBodySchema } from './auth.schemas.js';
 import { ok } from '../../../shared/http/response-envelope.js';
 import { authenticate } from '../../../shared/http/authenticate.js';
 import { InvalidCredentialsError } from '../domain/errors.js';
@@ -40,6 +41,24 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         throw new InvalidCredentialsError();
       }
       return ok({ id: user.id, email: user.email });
+    },
+  );
+
+  typedApp.post(
+    '/auth/refresh',
+    {
+      schema: { body: refreshBodySchema },
+      config: { rateLimit: { max: 30, timeWindow: '15 minutes' } },
+    },
+    async (request, reply) => {
+      const refreshUseCase = createRefreshUseCase({
+        db: app.db,
+        refreshTokens,
+        signAccessToken: (payload) => reply.jwtSign(payload),
+      });
+
+      const result = await refreshUseCase.execute(request.body);
+      return ok(result);
     },
   );
 };
