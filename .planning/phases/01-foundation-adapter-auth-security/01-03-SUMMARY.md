@@ -192,3 +192,7 @@ If any of the above deviates from `01-UI-SPEC.md` (wrong color, wrong copy, miss
 ---
 *Phase: 01-foundation-adapter-auth-security*
 *Completed: 2026-09-13*
+
+## Self-Check: PASSED
+
+All key files verified present on disk (frontend/package.json, frontend/components.json, frontend/src/contexts/auth/index.tsx, frontend/src/public/Login/index.tsx, frontend/src/private/Dashboard/index.tsx, frontend/tests/login.test.tsx, this summary); all 3 commits (`6095eb5`, `5d49df0`, `e6ede68`) verified present in `git log`.
