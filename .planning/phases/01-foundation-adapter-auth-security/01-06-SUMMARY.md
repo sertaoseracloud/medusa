@@ -149,3 +149,7 @@ None — reused the `.env` values provided for this worktree (live Azure Postgre
 ---
 *Phase: 01-foundation-adapter-auth-security*
 *Completed: 2026-09-13*
+
+## Self-Check: PASSED
+
+All 6 created files verified present on disk (refresh.use-case.ts, logout.use-case.ts, change-password.use-case.ts, refresh.test.ts, logout.test.ts, silent-refresh.test.tsx); all 4 commits (`20561d4`, `3d3a98b`, `2938a16`, `d1bc9cf`) verified present in `git log`.
