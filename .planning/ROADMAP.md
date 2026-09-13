@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 8 plans (6 waves)
 
 Plans:
-- [ ] 01-01-PLAN.md — Backend runtime skeleton: Fastify + Drizzle/PostgreSQL, secrets fail-fast, CORS/helmet/rate-limit, central error envelope, live GET /health
+- [x] 01-01-PLAN.md — Backend runtime skeleton: Fastify + Drizzle/PostgreSQL, secrets fail-fast, CORS/helmet/rate-limit, central error envelope, live GET /health
 - [ ] 01-02-PLAN.md — Login API slice: seeded operator, POST /auth/login with persisted refresh token, login rate limit, crash-free JWT guard on GET /auth/me
 - [ ] 01-03-PLAN.md — Frontend login slice: React 19 + Vite + shadcn scaffold, login screen, protected dashboard fed by GET /auth/me (Walking Skeleton complete)
 - [ ] 01-04-PLAN.md — AES-256-GCM credential vault and the IExchangeAdapter abstraction with the ccxt-backed Binance adapter
