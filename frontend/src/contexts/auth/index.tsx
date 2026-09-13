@@ -1,7 +1,13 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react';
 
-// Placeholder scaffolded in Task 1 to prove the routed app shell + design system build.
-// Task 2 replaces the provider body with the real localStorage/POST /auth/login-backed logic.
+import { api, setAccessToken } from '@/api';
 
 export interface AuthUser {
   id: string;
@@ -22,14 +28,65 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const value: AuthContextData = {
-    user: null,
-    isBootstrapping: false,
-    signIn: async () => {},
-    signOut: async () => {},
-  };
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  useEffect(() => {
+    const bootstrap = async () => {
+      const storedAccessToken = localStorage.getItem('@Beholder:accessToken');
+
+      if (!storedAccessToken) {
+        setIsBootstrapping(false);
+        return;
+      }
+
+      setAccessToken(storedAccessToken);
+
+      try {
+        const response = await api.get<{ data: AuthUser }>('/auth/me');
+        setUser(response.data.data);
+      } catch {
+        // A failed hydration (e.g. expired/invalid token) clears state silently (D-10) —
+        // no "session expired" message, the operator simply sees the login screen.
+        localStorage.removeItem('@Beholder:accessToken');
+        localStorage.removeItem('@Beholder:refreshToken');
+        setAccessToken(null);
+        setUser(null);
+      } finally {
+        setIsBootstrapping(false);
+      }
+    };
+
+    void bootstrap();
+  }, []);
+
+  const signIn = useCallback(
+    async ({ email, password }: { email: string; password: string }) => {
+      const response = await api.post('/auth/login', { email, password });
+      const { accessToken, refreshToken, user: signedInUser } = response.data.data;
+
+      localStorage.setItem('@Beholder:accessToken', accessToken);
+      localStorage.setItem('@Beholder:refreshToken', refreshToken);
+      setAccessToken(accessToken);
+      setUser(signedInUser);
+    },
+    [],
+  );
+
+  const signOut = useCallback(async () => {
+    // Server-side refresh-token revocation (D-11) is added in a later plan once the
+    // corresponding logout endpoint exists — this seam intentionally only clears client state for now.
+    localStorage.removeItem('@Beholder:accessToken');
+    localStorage.removeItem('@Beholder:refreshToken');
+    setAccessToken(null);
+    setUser(null);
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, isBootstrapping, signIn, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export function useAuth(): AuthContextData {
