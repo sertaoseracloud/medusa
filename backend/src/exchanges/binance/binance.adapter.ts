@@ -21,6 +21,18 @@ function mapExchangeError(err: unknown): Error {
   return new ExchangeUnknownError();
 }
 
+// ccxt's binance markets report precision in TICK_SIZE mode (a fractional step
+// like 1e-8, 0.001, ...), not as a plain decimal-place count — inserting that
+// float straight into an `integer` column fails ("invalid input syntax for
+// type integer: 1e-8"). This converts either representation to an integer
+// decimal-place count.
+function toDecimalPlaces(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  if (Number.isInteger(n) && n >= 1) return n; // already a decimal-place count
+  return Math.max(Math.round(-Math.log10(n)), 0); // tick-size step -> decimal places
+}
+
 function normalizeMarket(market: Record<string, any>): NormalizedSymbol {
   const filters: Array<Record<string, any>> = market.info?.filters ?? [];
   const minNotionalFilter = filters.find(
@@ -32,8 +44,8 @@ function normalizeMarket(market: Record<string, any>): NormalizedSymbol {
     symbol: market.symbol,
     base: market.base,
     quote: market.quote,
-    basePrecision: market.precision?.base ?? 0,
-    quotePrecision: market.precision?.quote ?? 0,
+    basePrecision: toDecimalPlaces(market.precision?.base),
+    quotePrecision: toDecimalPlaces(market.precision?.quote),
     minNotional: minNotionalFilter?.minNotional ?? null,
     minLotSize: minLotSizeFilter?.minQty ?? null,
   };
