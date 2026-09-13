@@ -32,8 +32,19 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can save Binance API key/secret through the settings UI; credentials are stored with envelope encryption (AES-256-GCM, random nonce per record) and are never returned in plaintext via any API response or written to logs.
   4. Market symbols sync automatically from Binance through the new Exchange Adapter abstraction (not a hardcoded Binance-only client).
   5. Every API endpoint rejects invalid input (schema validation) and malformed/expired JWTs gracefully without crashing the server; automated unit/integration tests cover auth, credential storage, and symbol sync.
-**Plans**: TBD
+**Plans**: 8 plans (6 waves)
+
+Plans:
+- [ ] 01-01-PLAN.md — Backend runtime skeleton: Fastify + Drizzle/PostgreSQL, secrets fail-fast, CORS/helmet/rate-limit, central error envelope, live GET /health
+- [ ] 01-02-PLAN.md — Login API slice: seeded operator, POST /auth/login with persisted refresh token, login rate limit, crash-free JWT guard on GET /auth/me
+- [ ] 01-03-PLAN.md — Frontend login slice: React 19 + Vite + shadcn scaffold, login screen, protected dashboard fed by GET /auth/me (Walking Skeleton complete)
+- [ ] 01-04-PLAN.md — AES-256-GCM credential vault and the IExchangeAdapter abstraction with the ccxt-backed Binance adapter
+- [ ] 01-05-PLAN.md — Save-credentials API: settings table, test-connection-before-persist, masked DTO, redacted logs
+- [ ] 01-06-PLAN.md — Session lifecycle: refresh with rotation, revoking logout, silent background refresh, password change
+- [ ] 01-07-PLAN.md — Settings UI: Binance credentials card with masked secret and per-failure errors, password-change card with the env-var revert warning
+- [ ] 01-08-PLAN.md — Symbol sync slice: atomic transactional sync, empty-table-gated non-blocking boot sync, manual sync endpoint and settings panel
 **UI hint**: yes
+**Skeleton**: 01-SKELETON.md (architectural contract carried into Phases 2-6)
 
 ### Phase 2: Realtime Gateway & Dashboard Parity
 **Goal**: User sees live market data (ticker, order book, balance) on the dashboard through a secure, topic-scoped WebSocket connection, with charting preserved.
@@ -99,10 +110,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation — Adapter, Auth & Security | 0/TBD | Not started | - |
+| 1. Foundation — Adapter, Auth & Security | 0/8 | Planned | - |
 | 2. Realtime Gateway & Dashboard Parity | 0/TBD | Not started | - |
 | 3. Two-Factor Authentication | 0/TBD | Not started | - |
 | 4. Shared Rule Engine & Price Alerts | 0/TBD | Not started | - |
 | 5. Backtesting | 0/TBD | Not started | - |
 | 6. Performance Reporting | 0/TBD | Not started | - |
-</content>
