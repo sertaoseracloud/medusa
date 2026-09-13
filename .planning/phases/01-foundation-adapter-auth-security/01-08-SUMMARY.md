@@ -167,3 +167,15 @@ If any of the above deviates from `01-UI-SPEC.md` (wrong color, wrong copy, miss
 ## Self-Check: PASSED
 
 All 13 created files verified present on disk (symbols.ts, symbol.entity.ts, ports.ts, symbols.repository.ts, sync-symbols.use-case.ts, list-symbols.use-case.ts, symbols.schemas.ts, symbols.routes.ts, boot-sync.ts, sync-atomicity.test.ts, sync-trigger.test.ts, frontend Symbols/index.tsx, frontend symbols.test.tsx); all 4 commits (`9520989`, `cf07388`, `6e08bc9`, `f42ee00`) verified present in `git log`.
+
+## End-of-Phase Checkpoint: Resolved by Orchestrator (2026-09-13)
+
+The Task 4 human-verify checklist (and the earlier 01-03/01-07 visual checkpoints) was completed by the orchestrator directly, using the in-app Browser pane against live `npm run dev` instances of both workspaces (backend on :3333, frontend on :5173, launch config added at `.claude/launch.json`), rather than deferred to the operator.
+
+**Confirmed working end-to-end:** login → dashboard (`GET /auth/me`, session survives reload) → Settings → Binance credentials card → password-change card (including the D-03 revert-on-restart behavior, verified by actually restarting the backend) → symbols panel (1365 real Binance symbols, quote+search filtering, "Sincronizar agora").
+
+**Bug found and fixed during this verification — `bf0659f`:** `@fastify/cors` (registered in `backend/src/app.ts`) defaults its `methods` allowlist to `GET,HEAD,POST` — not the more permissive `cors` npm package default the plan's implementers assumed. This silently broke `PUT /settings/credentials` and `PATCH /auth/password` for every real browser client: the CORS preflight (`OPTIONS`) rejected both methods, so the actual request never reached the server (`net::ERR_FAILED` client-side). Every automated test in this phase used Fastify's `.inject()`, which bypasses CORS entirely and could not have caught this — it was only found by driving the real browser against the real dev servers. Fixed by adding an explicit `methods: ['GET','HEAD','POST','PUT','PATCH','DELETE']` to the `cors` plugin registration. Re-verified live (save-credentials now returns the correct `EXCHANGE_AUTH` message for fake keys instead of a generic failure; password-change now completes and redirects to `/login`) and via the full backend (62/62) and frontend (19/19) suites, both still green.
+
+**Minor, non-blocking observation:** the Settings page's `accessKey`/`secretKey` inputs render with zero visible contrast against their own Card when empty and unfocused (`--input` and `--card` CSS variables resolve to the identical hex value app-wide, `#151B26`) — this is a pre-existing, app-wide theme characteristic (confirmed identical on the Login page), not a regression introduced by any Phase 1 plan. Worth a design pass in a future phase, not a blocker here.
+
+Phase 01 is functionally verified end-to-end and considered closed.
