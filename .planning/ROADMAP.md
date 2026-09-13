@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Foundation — Adapter, Auth & Security
-**Goal**: User can log in securely, configure encrypted Binance credentials, and have market symbols synced automatically — all on the new, hardened stack.
+**Goal**: As an operator, I want to log in securely, configure encrypted Binance credentials, and have market symbols synced automatically, so that I can safely start using the trading bot on the new, hardened stack.
 **Mode:** mvp
 **Depends on**: Nothing (first phase)
 **Requirements**: FOUND-01, FOUND-02, FOUND-03, FOUND-04, SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, SEC-07, SEC-08, SEC-09, EXCH-01, EXCH-02, EXCH-03, AUTH-01, AUTH-02, AUTH-03, TEST-01
