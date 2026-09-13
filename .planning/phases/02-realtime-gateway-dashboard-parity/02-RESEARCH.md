@@ -406,22 +406,22 @@ See Architecture Patterns section above (Patterns 1–5) — each includes a sou
 | A2 | The TradingView free embed widget (`tv.js`) has no runtime `setSymbol()`/equivalent API, and only the licensed Charting Library exposes `IChartingLibraryWidget.setSymbol()` | Architecture Patterns (Pattern 5), Common Pitfalls (Pitfall 2) | If TradingView has since added a limited public API to the free embed that this research missed, the recommended "remount on symbol change" approach is still correct/safe but potentially more heavyweight than necessary — low risk either way since remounting is a valid fallback regardless |
 | A3 | Binance recommends userData keepalive "about every 30 minutes" against a 60-minute expiry, and this cadence is safe under Node `setInterval` drift/backgrounding on a typical server host | Architecture Patterns (Pattern 3), Common Pitfalls (Pitfall 1) | If the interval is missed once (e.g., process restart without immediate rescheduling) the balance stream silently goes stale until manually reconnected — mitigated by tying keepalive scheduling to listenKey creation, but worth an explicit test/monitor |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact backoff parameters for server→Binance reconnect (D-05)**
+1. **Exact backoff parameters for server→Binance reconnect (D-05) — RESOLVED**
    - What we know: exponential backoff with a cap is the standard pattern (Pattern 4 above uses 1s start, ×2, 30s cap as illustrative defaults).
    - What's unclear: whether the project wants jitter, a maximum retry count before alerting an operator, or specific values tuned to Binance's own rate-limit/ban behavior for reconnect storms.
-   - Recommendation: Leave as Claude's Discretion per CONTEXT.md; the planner should pick concrete values (this research's defaults are a reasonable starting point) and document them in the plan rather than leaving them implicit in code.
+   - **RESOLVED in 02-01-PLAN.md Task 3:** 1000ms initial delay, ×2 factor, 30000ms cap, ±20% jitter — locked concrete values, not left implicit in code.
 
-2. **Frontend WS client: library vs. hand-rolled (Claude's Discretion per CONTEXT.md)**
+2. **Frontend WS client: library vs. hand-rolled (Claude's Discretion per CONTEXT.md) — RESOLVED**
    - What we know: both approaches satisfy D-04's behavioral requirement; `reconnecting-websocket` is mature but has not been released in ~4 years; hand-rolled requires more test surface but zero new dependency.
    - What's unclear: which the planner/executor should actually choose — this research recommends the library given the zero-existing-WS-client-code context, but does not lock the decision.
-   - Recommendation: Planner should make an explicit choice and document it in the phase plan (not defer implicitly to the executor).
+   - **RESOLVED in 02-02-PLAN.md Task 1:** native `WebSocket` API, hand-rolled reconnect logic — no `reconnecting-websocket` dependency added. This also eliminates the phase's only `[ASSUMED]`/stale-package concern.
 
-3. **Depth stream reconnect and lastUpdateId continuity**
+3. **Depth stream reconnect and lastUpdateId continuity — RESOLVED (not needed)**
    - What we know: `depth10@100ms` sends full snapshots (not deltas), so there is no "resume from last update" concern on reconnect — a fresh connection just starts receiving fresh snapshots.
    - What's unclear: whether the client should show a brief "stale" indicator for the book specifically during the ~1-3 seconds of a Binance-side reconnect, separate from the D-04 client-WS banner (which is about the client↔server connection, not server↔Binance).
-   - Recommendation: Out of scope to solve definitively in research; the planner should decide whether book/ticker topic messages need a `stale: true` flag surfaced during a server-side Binance reconnect, or whether the brief gap is acceptable to leave unsignaled given D-05 already keeps reconnects fast.
+   - **RESOLVED in 02-04-PLAN.md:** no `stale` flag introduced — the brief gap during a server-side Binance reconnect is accepted as unsignaled, since D-05's backoff already keeps reconnects fast and full snapshots make staleness self-correcting on the next frame.
 
 ## Environment Availability
 
