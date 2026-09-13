@@ -16,6 +16,7 @@ import type { DrizzleDB } from './persistence/db.js';
 import type { AppSecrets } from './security/secrets.js';
 import { authRoutes } from './modules/auth/infrastructure/auth.routes.js';
 import { ACCESS_TOKEN_TTL } from './modules/auth/infrastructure/jwt.js';
+import { settingsRoutes } from './modules/settings/infrastructure/settings.routes.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -69,6 +70,7 @@ export async function buildApp(deps: BuildAppDeps): Promise<AppInstance> {
   app.decorate('secrets', deps.secrets);
 
   await app.register(authRoutes);
+  await app.register(settingsRoutes);
 
   app.get('/health', async () => ok({ status: 'ok' }));
 
