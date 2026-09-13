@@ -1,3 +1,6 @@
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+
 # Logs
 logs
 *.log
