@@ -56,7 +56,15 @@ Plans:
   2. WebSocket connections authenticate via a first-message token exchange handshake, never via a token embedded in the connection URL.
   3. The TradingView chart widget renders on the dashboard alongside live data, matching legacy functional parity.
   4. Manual UAT via Claude Browser confirms the dashboard renders correctly and updates in real time from an end user's point of view.
-**Plans**: TBD
+**Plans**: 6 plans (6 waves)
+
+Plans:
+- [ ] 02-01-PLAN.md — Realtime gateway backend: event bus, topic registry, WS first-message auth handshake with origin allowlist and heartbeat, Binance miniTicker stream with reconnect-backoff
+- [ ] 02-02-PLAN.md — Live ticker on the dashboard: native-WebSocket client with re-auth/re-subscribe, RealtimeProvider, TickerCard and the D-04 reconnection banner
+- [ ] 02-03-PLAN.md — Symbol selection and chart: searchable pair combobox persisted in localStorage, symbol-driven re-subscription, TradingView widget with remount-on-symbol-change
+- [ ] 02-04-PLAN.md — Order book: Binance depth10@100ms snapshots on the book topic, 10x10 depth table with bid/ask semantic colors
+- [ ] 02-05-PLAN.md — Balance panel: listenKey lifecycle with 30-minute keepalive, account topic served from the user's own decrypted credentials, all-assets balance table
+- [ ] 02-06-PLAN.md — Phase gate: full-suite regression plus manual browser UAT of the live dashboard and the reconnection behavior (TEST-02)
 **UI hint**: yes
 
 ### Phase 3: Two-Factor Authentication
@@ -111,7 +119,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation — Adapter, Auth & Security | 0/8 | Planned | - |
-| 2. Realtime Gateway & Dashboard Parity | 0/TBD | Not started | - |
+| 2. Realtime Gateway & Dashboard Parity | 0/6 | Planned | - |
 | 3. Two-Factor Authentication | 0/TBD | Not started | - |
 | 4. Shared Rule Engine & Price Alerts | 0/TBD | Not started | - |
 | 5. Backtesting | 0/TBD | Not started | - |
