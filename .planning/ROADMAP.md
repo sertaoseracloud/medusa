@@ -42,7 +42,7 @@ Plans:
 - [x] 01-05-PLAN.md — Save-credentials API: settings table, test-connection-before-persist, masked DTO, redacted logs
 - [x] 01-06-PLAN.md — Session lifecycle: refresh with rotation, revoking logout, silent background refresh, password change
 - [x] 01-07-PLAN.md — Settings UI: Binance credentials card with masked secret and per-failure errors, password-change card with the env-var revert warning
-- [ ] 01-08-PLAN.md — Symbol sync slice: atomic transactional sync, empty-table-gated non-blocking boot sync, manual sync endpoint and settings panel
+- [x] 01-08-PLAN.md — Symbol sync slice: atomic transactional sync, empty-table-gated non-blocking boot sync, manual sync endpoint and settings panel
 **UI hint**: yes
 **Skeleton**: 01-SKELETON.md (architectural contract carried into Phases 2-6)
 
