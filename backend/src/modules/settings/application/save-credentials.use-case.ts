@@ -33,6 +33,19 @@ export function createSaveCredentialsUseCase(deps: SaveCredentialsDeps): {
         secretKey: input.secretKey,
       });
 
+      // WR-01: capture the previous credential pair (if any) BEFORE
+      // overwriting it, so the now-stale cached ccxt client for it can be
+      // evicted once the new credentials are persisted. Without this, every
+      // rotation leaves the old client cache entry to leak for the process
+      // lifetime (the adapter is a process-lifetime singleton).
+      const existing = await deps.settings.findByUserId(input.userId);
+      const previousCreds = existing
+        ? {
+            accessKey: openCredential(existing.encryptedAccessKey, deps.masterKey),
+            secretKey: openCredential(existing.encryptedSecretKey, deps.masterKey),
+          }
+        : null;
+
       const sealedAccessKey = sealCredential(input.accessKey, deps.masterKey);
       const sealedSecretKey = sealCredential(input.secretKey, deps.masterKey);
 
@@ -42,6 +55,10 @@ export function createSaveCredentialsUseCase(deps: SaveCredentialsDeps): {
         sealedSecretKey,
         KEY_VERSION,
       );
+
+      if (previousCreds) {
+        deps.adapter.dispose(previousCreds);
+      }
 
       const record = await deps.settings.findByUserId(input.userId);
       return toSettingsDto(record, deps.masterKey);

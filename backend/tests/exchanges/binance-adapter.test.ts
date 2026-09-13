@@ -165,4 +165,23 @@ describe('BinanceAdapter memoization', () => {
 
     expect(constructorCallCount).toBe(1);
   });
+
+  // CR-01 regression: same accessKey, rotated secretKey must NOT reuse the
+  // stale client — the cache key must include secretKey, not just accessKey.
+  it('constructs a new ccxt client when the accessKey is unchanged but the secretKey is rotated', async () => {
+    const adapter = new BinanceAdapter();
+    await adapter.testConnection(CREDS);
+    await adapter.testConnection({ accessKey: CREDS.accessKey, secretKey: 'rotated-secret-key' });
+
+    expect(constructorCallCount).toBe(2);
+  });
+
+  it('dispose() evicts the cached client so a subsequent call with the same credentials rebuilds it', async () => {
+    const adapter = new BinanceAdapter();
+    await adapter.testConnection(CREDS);
+    adapter.dispose(CREDS);
+    await adapter.testConnection(CREDS);
+
+    expect(constructorCallCount).toBe(2);
+  });
 });

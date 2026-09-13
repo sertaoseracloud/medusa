@@ -8,8 +8,13 @@ import {
   ExchangeUnknownError,
 } from '../core/errors.js';
 
+// Fingerprint on BOTH accessKey and secretKey so a rotated secret (same
+// accessKey, new secretKey — the normal Binance key-rotation flow) always
+// misses the cache instead of silently reusing a client built from the old
+// secret (CR-01). `dispose()` still exists to explicitly evict a specific
+// credential pair (see save-credentials.use-case.ts, WR-01).
 function fingerprint(creds: DecryptedCredentials): string {
-  return creds.accessKey;
+  return `${creds.accessKey}:${creds.secretKey}`;
 }
 
 function mapExchangeError(err: unknown): Error {

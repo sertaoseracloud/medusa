@@ -56,6 +56,7 @@ function createFakeAdapter(getSymbolsImpl: () => Promise<NormalizedSymbol[]>): I
       return [];
     },
     getSymbols: getSymbolsImpl,
+    dispose() {},
   };
 }
 
