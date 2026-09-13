@@ -22,7 +22,7 @@ export function registerErrorHandler(app: FastifyInstance<any, any, any, any, an
 
     if (err instanceof DomainError) {
       return reply.status(err.statusCode).send({
-        data: null,
+        data: { code: err.code },
         message: err.message,
         timestamp,
       });

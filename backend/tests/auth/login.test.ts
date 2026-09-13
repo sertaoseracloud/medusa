@@ -68,7 +68,7 @@ describe('POST /auth/login', () => {
 
     expect(res.statusCode).toBe(401);
     const body = res.json();
-    expect(body.data).toBeNull();
+    expect(body.data).toEqual({ code: 'INVALID_CREDENTIALS' });
     expect(body.message).toBe('Email ou senha incorretos.');
     expect(res.payload).not.toContain('accessToken');
     expect(res.payload).not.toContain('refreshToken');

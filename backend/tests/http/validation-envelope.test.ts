@@ -62,7 +62,7 @@ describe('validation envelope', () => {
     expect(res.statusCode).toBe(409);
     const body = res.json();
     expect(body.message).toBe('resource already exists');
-    expect(body.data).toBeNull();
+    expect(body.data).toEqual({ code: 'TEST_CONFLICT' });
   });
 
   it('an unknown error returns an opaque 500', async () => {
