@@ -53,6 +53,7 @@ export async function buildApp(deps: BuildAppDeps): Promise<AppInstance> {
   await app.register(cors, {
     origin: corsOrigins,
     credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
 
   await app.register(rateLimit, {
