@@ -30,9 +30,13 @@ interface AuthProviderProps {
 }
 
 // The access token contract fixes a 15-minute lifetime (backend
-// ACCESS_TOKEN_TTL); used as the scheduling fallback on bootstrap hydration,
-// where no fresh expiresIn value is available (only login/refresh return one).
+// ACCESS_TOKEN_TTL); used ONLY as a last-resort scheduling fallback if no
+// stored expiry timestamp is available (e.g. a token persisted before this
+// field existed). Normally bootstrap uses the actual remaining
+// time-to-expiry — see WR-02.
 const DEFAULT_ACCESS_TOKEN_LIFETIME_SECONDS = 900;
+
+const ACCESS_TOKEN_EXPIRES_AT_KEY = '@Beholder:accessTokenExpiresAt';
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -50,9 +54,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     clearRefreshTimer();
     localStorage.removeItem('@Beholder:accessToken');
     localStorage.removeItem('@Beholder:refreshToken');
+    localStorage.removeItem(ACCESS_TOKEN_EXPIRES_AT_KEY);
     setAccessToken(null);
     setUser(null);
   }, [clearRefreshTimer]);
+
+  // Persists the token's actual expiry instant so a page reload can compute
+  // the real remaining time-to-expiry instead of always assuming a fresh
+  // 15-minute window (WR-02).
+  const persistExpiresAt = useCallback((expiresIn: number) => {
+    const expiresAtMs = Date.now() + expiresIn * 1000;
+    localStorage.setItem(ACCESS_TOKEN_EXPIRES_AT_KEY, String(expiresAtMs));
+  }, []);
 
   const scheduleRefresh = useCallback(
     (expiresIn: number) => {
@@ -87,6 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       localStorage.setItem('@Beholder:accessToken', accessToken);
       localStorage.setItem('@Beholder:refreshToken', refreshToken);
+      persistExpiresAt(expiresIn);
       setAccessToken(accessToken);
       scheduleRefresh(expiresIn);
     } catch {
@@ -95,7 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearSession();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clearSession, scheduleRefresh]);
+  }, [clearSession, persistExpiresAt, scheduleRefresh]);
 
   useEffect(() => {
     setOnSilentSignOut(() => clearSession());
@@ -116,7 +130,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const response = await api.get<{ data: AuthUser }>('/auth/me');
         setUser(response.data.data);
-        scheduleRefresh(DEFAULT_ACCESS_TOKEN_LIFETIME_SECONDS);
+
+        // WR-02: use the token's actual remaining time-to-expiry (persisted
+        // at login/refresh time) instead of always assuming a fresh
+        // 15-minute window, so a reload shortly before expiry doesn't
+        // schedule a stale-length proactive refresh.
+        const storedExpiresAtRaw = localStorage.getItem(ACCESS_TOKEN_EXPIRES_AT_KEY);
+        const storedExpiresAt = storedExpiresAtRaw ? Number(storedExpiresAtRaw) : NaN;
+        const remainingSeconds = Number.isFinite(storedExpiresAt)
+          ? Math.max((storedExpiresAt - Date.now()) / 1000, 0)
+          : DEFAULT_ACCESS_TOKEN_LIFETIME_SECONDS;
+
+        scheduleRefresh(remainingSeconds);
       } catch {
         // A failed hydration (e.g. expired/invalid token) clears state silently (D-10) —
         // no explicit end-of-session message, the operator simply sees the login screen.
@@ -139,11 +164,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       localStorage.setItem('@Beholder:accessToken', accessToken);
       localStorage.setItem('@Beholder:refreshToken', refreshToken);
+      persistExpiresAt(expiresIn);
       setAccessToken(accessToken);
       setUser(signedInUser);
       scheduleRefresh(expiresIn);
     },
-    [scheduleRefresh],
+    [persistExpiresAt, scheduleRefresh],
   );
 
   const signOut = useCallback(async () => {
