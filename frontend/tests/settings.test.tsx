@@ -63,13 +63,14 @@ describe('Settings', () => {
     localStorage.clear();
   });
 
-  it('renders the credenciais card title', async () => {
+  it('renders both card titles: credenciais and password', async () => {
     mockAuthenticatedBootstrap();
     renderApp();
 
     await waitFor(() => {
       expect(screen.getByText('Credenciais da Binance')).toBeInTheDocument();
     });
+    expect(screen.getByText('Trocar senha')).toBeInTheDocument();
   });
 
   it('renders the masked secretKeyMasked for configured credenciais without the full fixture secret', async () => {
@@ -213,5 +214,37 @@ describe('Settings', () => {
         ),
       ).toBeInTheDocument();
     });
+  });
+
+  it('shows the env-var warning on the password card on first render with no interaction', async () => {
+    mockAuthenticatedBootstrap();
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getByText('Trocar senha')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(
+        'Atenção: esta senha será revertida para o valor da variável de ambiente no próximo restart do servidor, caso a variável não seja atualizada junto.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('blocks submission of an 8-character new password with an inline field message and no request', async () => {
+    mockAuthenticatedBootstrap();
+    const user = userEvent.setup();
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getByText('Trocar senha')).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText('Senha atual'), 'current-pass');
+    await user.type(screen.getByLabelText('Nova senha'), '12345678');
+    await user.click(screen.getByRole('button', { name: 'Atualizar senha' }));
+
+    expect(screen.getByText('A nova senha deve ter ao menos 12 caracteres.')).toBeInTheDocument();
+    expect(api.patch).not.toHaveBeenCalled();
   });
 });
