@@ -47,3 +47,16 @@ export const refreshResponseSchema = z.object({
   message: z.string(),
   timestamp: z.string(),
 });
+
+export const logoutBodySchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token é obrigatório'),
+});
+
+export type LogoutBody = z.infer<typeof logoutBodySchema>;
+
+export const changePasswordBodySchema = z.object({
+  currentPassword: z.string().min(1, 'Senha atual é obrigatória'),
+  newPassword: z.string().min(12, 'A nova senha deve ter no mínimo 12 caracteres'),
+});
+
+export type ChangePasswordBody = z.infer<typeof changePasswordBodySchema>;

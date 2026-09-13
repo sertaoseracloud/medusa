@@ -4,7 +4,14 @@ import { createUserRepository } from './user.repository.js';
 import { createRefreshTokenRepository } from './refresh-token.repository.js';
 import { createLoginUseCase } from '../application/login.use-case.js';
 import { createRefreshUseCase } from '../application/refresh.use-case.js';
-import { loginBodySchema, refreshBodySchema } from './auth.schemas.js';
+import { createLogoutUseCase } from '../application/logout.use-case.js';
+import { createChangePasswordUseCase } from '../application/change-password.use-case.js';
+import {
+  loginBodySchema,
+  refreshBodySchema,
+  logoutBodySchema,
+  changePasswordBodySchema,
+} from './auth.schemas.js';
 import { ok } from '../../../shared/http/response-envelope.js';
 import { authenticate } from '../../../shared/http/authenticate.js';
 import { InvalidCredentialsError } from '../domain/errors.js';
@@ -59,6 +66,42 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
       const result = await refreshUseCase.execute(request.body);
       return ok(result);
+    },
+  );
+
+  typedApp.post(
+    '/auth/logout',
+    {
+      schema: { body: logoutBodySchema },
+      preHandler: [authenticate],
+    },
+    async (request, reply) => {
+      const logoutUseCase = createLogoutUseCase({ refreshTokens });
+      await logoutUseCase.execute({
+        userId: request.user.sub,
+        refreshToken: request.body.refreshToken,
+      });
+      return reply.status(204).send();
+    },
+  );
+
+  // The operator password is re-synced from SEED_USER_PASSWORD on every
+  // server boot (D-03) — a successful change here only survives until the
+  // next restart unless the environment variable is updated too.
+  typedApp.patch(
+    '/auth/password',
+    {
+      schema: { body: changePasswordBodySchema },
+      preHandler: [authenticate],
+    },
+    async (request, reply) => {
+      const changePasswordUseCase = createChangePasswordUseCase({ users, refreshTokens });
+      await changePasswordUseCase.execute({
+        userId: request.user.sub,
+        currentPassword: request.body.currentPassword,
+        newPassword: request.body.newPassword,
+      });
+      return reply.status(204).send();
     },
   );
 };
