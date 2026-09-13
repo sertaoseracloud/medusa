@@ -130,3 +130,7 @@ None — reused the existing `.env` values (Azure PostgreSQL dev/test databases,
 ---
 *Phase: 01-foundation-adapter-auth-security*
 *Completed: 2026-09-13*
+
+## Self-Check: PASSED
+
+All 14 created files verified present on disk; all 4 commits (`da19e17`, `744aa2c`, `97fab83`, `54e0984`) verified present in `git log`.
