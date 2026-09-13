@@ -17,6 +17,7 @@ import type { AppSecrets } from './security/secrets.js';
 import { authRoutes } from './modules/auth/infrastructure/auth.routes.js';
 import { ACCESS_TOKEN_TTL } from './modules/auth/infrastructure/jwt.js';
 import { settingsRoutes } from './modules/settings/infrastructure/settings.routes.js';
+import { symbolsRoutes } from './modules/symbols/infrastructure/symbols.routes.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -71,6 +72,7 @@ export async function buildApp(deps: BuildAppDeps): Promise<AppInstance> {
 
   await app.register(authRoutes);
   await app.register(settingsRoutes);
+  await app.register(symbolsRoutes);
 
   app.get('/health', async () => ok({ status: 'ok' }));
 
